@@ -4,6 +4,10 @@
 
 MODULE_LICENSE("Dual BSD/GPL");
 
+#define STATUS_SUCCESS (0)
+#define PS5_CTRL_PRODUCT_ID ()
+#define PS5_CTRL_VENDOR_ID ()
+
 /*
 struct usb_driver {
   const char * name;
@@ -30,16 +34,30 @@ static struct usb_driver ps5_ctrl_driver = {
     .probe = ps5_ctrl_probe
 };
 
+/* table of devices that work with this driver */
+static struct usb_device_id ps5_ctrl_table [] = {
+        { USB_DEVICE(PS5_CTRL_VENDOR_ID, PS5_CTRL_PRODUCT_ID) },
+        { }                      /* Terminating entry */
+};
+
 
 static int __init hello_init(void)
 {
+    int res = 0;
     printk(KERN_ALERT "Module init\n");
+    res = usb_register(&ps5_ctrl_driver);
+    if (res != STATUS_SUCCESS) {
+        printk("usb_register() failed with code %d\n", res);
+        return res;
+    }
+    //and don't forget MODULE_DEVICE_TABLE(usb, ...)
     return 0;
 }
 
 static void __exit hello_exit(void)
 {
     printk(KERN_ALERT "Module exit\n");
+    usb_deregister(&ps5_ctrl_driver);
 }
 
 static int ps5_ctrl_probe(struct usb_interface* intf, unsigned int code, void* buf) {
